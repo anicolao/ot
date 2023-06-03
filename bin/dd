@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib'
+
+content = STDIN.binmode.read
+sha256sum = IO.popen('sha256sum', 'r+') do |pipe|
+  pipe.write(content)
+  pipe.close_write
+  pipe.read
+end.split(' ')[0]
+
+File.open("/tmp/#{sha256sum}", 'wb') do |f|
+  f.write(content)
+end
+
+op = Operator.new(
+  cmd: "#{File.basename($PROGRAM_NAME)} #{ARGV.join(' ')}".strip,
+  args: {file: sha256sum},
+  content: ''
+)
+STDOUT.write(op.serialize)

@@ -1,0 +1,12 @@
+commands:
+  compress: uncompress
+  base64: base64 -d
+  cat: cat
+  dd status=none: dd status=none if=/tmp/%{file}
+
+# Unfortunately, some commands add newlines to the output (e.g. base64),
+# whereas others do not (e.g. compress), so we need to chop it off as required.
+nl_adders:
+  - base64
+  - base64 -d
+  - cat # ??? to check ???
