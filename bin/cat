@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib'
+
+cat_op = Operator.new(name: 'cat', pipeline: ['cat'])
+
+Cmds::Generic.exec(
+  fwd_op: cat_op,
+  fwd_args: {},
+  input_stream: $stdin.binmode,
+  inv_op: cat_op,
+  inv_args: {}
+)

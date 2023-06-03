@@ -1,0 +1,32 @@
+inherit_from: .rubocop_todo.yml
+
+require:
+  - rubocop-rspec
+
+AllCops:
+  Exclude:
+    - 'vendor/**/*'
+  NewCops: enable
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Max: 8
+
+Metrics/MethodLength:
+  Max: 20
+  CountAsOne: ['array', 'hash', 'heredoc']
+
+
+RSpec/MessageSpies:
+  EnforcedStyle: receive
+
+RSpec/ExampleLength:
+  Max: 15
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+RSpec/MultipleExpectations:
+  Max: 3

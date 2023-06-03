@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib'
+
+Cmds::Split.exec(input_stream: $stdin.binmode, strategy: Cmds::Split::Strategy::FixedBlockSize, size: 5)

@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib'
+
+decode_op = Operator.new(name: 'base64_d', pipeline: ['base64 -d'])
+encode_op = Operator.new(name: 'base64_e', pipeline: ['base64', "ruby -e 'print $stdin.binmode.read.chomp(\"\n\")'"])
+
+Cmds::Generic.exec(
+  fwd_op: decode_op,
+  fwd_args: {},
+  input_stream: $stdin.binmode,
+  inv_op: encode_op,
+  inv_args: {}
+)
