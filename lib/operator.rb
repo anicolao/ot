@@ -17,7 +17,8 @@ class Operator
   def serialize
     @serialized ||= begin
       cmd_output = exec
-      formatted_args = args.map { |k, v| "#{k}=#{v}" }.join(';')
+      # Only map arguments that are actually used by the inverse_cmd
+      formatted_args = args.map { |k, v| "#{k}=#{v}" if inverse_cmd.include?("%{#{k}}") }.compact.join(';')
       "#{MAGIC_MARKER}#{inverse_cmd}:#{formatted_args}:#{cmd_output.bytes.length}:#{cmd_output}"
     end
   end
