@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib'
+
+Cmds::Split.exec(STDIN.binmode, strategy: Cmds::Split::Strategy::Block, size: 5)
