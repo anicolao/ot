@@ -6,7 +6,7 @@ RSpec.describe Cmds::Splat do
   let(:op1) { Operator.new(cmd: 'cat', content: "test content 1") }
   let(:op2) { Operator.new(cmd: 'cat', content: "test content 2") }
   let(:op3) { Operator.new(cmd: 'base64', content: "test content 3") }
-  let(:op4) { Operator.new(cmd: 'dd status=none if=/tmp/%{file}', args: {file: 'abc'}, content: "test content 3") }
+  let(:op4) { Operator.new(cmd: 'dd status=none if=%{dir}%{file}', args: {file: 'abc'}, content: "test content 3") }
 
   let(:r_op1) { Operator.new(cmd: 'base64', content: op1.serialize) }
   let(:r_op2) { Operator.new(cmd: 'base64', content: op2.serialize) }
