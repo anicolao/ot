@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib'
+
+STORAGE_DIR = "#{ENV['HOME'].chomp('/')}/.ot/"
+
+is_fetch = ARGV.any? { |arg| arg.include?("if=#{STORAGE_DIR}") }
+
+op = if is_fetch
+  cmd = "#{File.basename($PROGRAM_NAME)} #{ARGV.join(' ')}".strip
+  sha256sum = ARGV.find do |arg|
+    arg.include?("if=#{STORAGE_DIR}")
+  end.gsub("if=#{STORAGE_DIR}", '')
+  Operator.new(
+    cmd: 'dd status=none if=%{dir}%{file}',
+    args: {dir: "#{ENV['HOME']}/.ot/", file: sha256sum},
+    content: `#{cmd}`
+  )
+else
+  content = $stdin.binmode.read
+  sha256sum = IO.popen('sha256sum', 'r+') do |pipe|
+    pipe.write(content)
+    pipe.close_write
+    pipe.read
+  end.split(' ')[0]
+
+  File.open("#{STORAGE_DIR}#{sha256sum}", 'wb') do |f|
+    f.write(content)
+  end
+
+  Operator.new(
+    cmd: "#{File.basename($PROGRAM_NAME)} #{ARGV.join(' ')}".strip,
+    args: {dir: "#{ENV['HOME']}/.ot/", file: sha256sum},
+    content: ''
+  )
+end
+$stdout.write(op.serialize)

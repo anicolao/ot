@@ -1,0 +1,12 @@
+/vendor/
+/coverage/
+
+.rspec_status
+.byebug_history
+
+/.DS_Store/
+.DS_Store
+
+.bash_history
+.viminfo
+/.bundle/
