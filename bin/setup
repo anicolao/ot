@@ -1,32 +1,53 @@
 #!/bin/bash
-ROOT=${0%/*}/..
-export TMP_KEYS=/tmp/authorized_keys.$$
-export SSH_KEYS=https://raw.githubusercontent.com/anicolao/ot/main/access/authorized_keys
-export SSH_CONFIG=~/.ssh/cloudshell.config
-export MOUNT_COMMAND=/tmp/cloud-shell-mount.$$
-export ACCOUNT=$(gcloud config list account --format "value(core.account)")
-if test -z "$ACCOUNT"
-then
-	gcloud auth login
-else
-	echo "Logged in as $ACCOUNT"
-fi
-gcloud cloud-shell scp cloudshell:/etc/ssh/keys/authorized_keys localhost:$TMP_KEYS
-gcloud cloud-shell get-mount-command /tmp > $MOUNT_COMMAND
-curl -s $SSH_KEYS >> $TMP_KEYS
-gcloud cloud-shell scp localhost:$TMP_KEYS cloudshell:/tmp/authorized_keys 
-cat $MOUNT_COMMAND | 
-	sed -re 's/[^A-Za-z0-9.\/_=]+/|/g' | 
-	awk -F\| '{ 
-	  print "Host *cloudshell*";
-	  print "  HostName "$3 
-	  print "  Port "$6 
-	  print "  User "$2 
-	  print "  StrictHostKeyChecking=no"
-	}' > $SSH_CONFIG
-IDENTITY_FILE=`cat $MOUNT_COMMAND | awk '{ print $6 }'`
-ssh -F $SSH_CONFIG $IDENTITY_FILE cloudshell 'sudo cp -v /tmp/authorized_keys /etc/ssh/keys/authorized_keys'
-cat $SSH_CONFIG | pbcopy
+
+function login {
+  account=$(gcloud config list account --format "value(core.account)")
+  if test -z "$account"
+  then
+    gcloud auth login
+  else
+    echo "Logged in as $account"
+  fi
+}
+
+function add_authorized_keys_to_cloudshell {
+  cloudshell_ssh_config_file=$1
+  identity_file=$2
+
+  authorized_keys_file=/tmp/authorized_keys.$$
+  project_authorized_keys_url=https://raw.githubusercontent.com/anicolao/ot/main/access/authorized_keys
+
+  gcloud cloud-shell scp --scp-flag=-q cloudshell:/etc/ssh/keys/authorized_keys localhost:$authorized_keys_file
+  curl -s $project_authorized_keys_url >> $authorized_keys_file
+  gcloud cloud-shell scp --scp-flag=-q localhost:$authorized_keys_file cloudshell:/tmp/authorized_keys
+  ssh -F $cloudshell_ssh_config_file $identity_file cloudshell 'sudo cp /tmp/authorized_keys /etc/ssh/keys/authorized_keys'
+}
+
+function write_cloudshell_ssh_config_file {
+  config_file=$1
+
+  mount_command_output=$(gcloud cloud-shell get-mount-command /tmp)
+  echo $mount_command_output |
+    sed -re 's/[^A-Za-z0-9.\/_=]+/|/g' |
+    awk -F\| '{
+      print "Host *cloudshell*";
+      print "  HostName "$3
+      print "  Port "$6
+      print "  User "$2
+      print "  StrictHostKeyChecking=no"
+    }' > $config_file
+}
+
+function get_gce_identity_file {
+  echo $(gcloud cloud-shell get-mount-command /tmp | awk '{ print $6 }')
+}
+
+cloudshell_ssh_config_file=~/.ssh/cloudshell.config
+login
+write_cloudshell_ssh_config_file $cloudshell_ssh_config_file
+add_authorized_keys_to_cloudshell $cloudshell_ssh_config_file $(get_gce_identity_file)
+
+cat $cloudshell_ssh_config_file | pbcopy
 echo
 echo "Send this configuration to your collaborator (it is on your clipboard): "
 echo
@@ -36,10 +57,10 @@ echo "Logging into your cloudshell instance..."
 echo
 if test -z "$SSH_AUTH_SOCK"
 then
-	echo "ssh agent is not running. Try: "
-	echo
-	echo agentup
-	echo ssh -A -F $SSH_CONFIG cloudshell
+  echo "ssh agent is not running. Try: "
+  echo
+  echo agentup
+  echo ssh -A -F $cloudshell_ssh_config_file cloudshell
 else
-	ssh -A -F $SSH_CONFIG cloudshell
+  ssh -A -F $cloudshell_ssh_config_file cloudshell
 fi
