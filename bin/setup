@@ -24,7 +24,8 @@ cat $MOUNT_COMMAND |
 	  print "  User "$2 
 	  print "  StrictHostKeyChecking=no"
 	}' > $SSH_CONFIG
-ssh -F $SSH_CONFIG cloudshell 'sudo cp /tmp/authorized_keys /etc/ssh/keys/authorized_keys'
+IDENTITY_FILE=`cat $MOUNT_COMMAND | awk '{ print $6 }'`
+ssh -F $SSH_CONFIG $IDENTITY_FILE cloudshell 'sudo cp -v /tmp/authorized_keys /etc/ssh/keys/authorized_keys'
 cat $SSH_CONFIG | pbcopy
 echo
 echo "Send this configuration to your collaborator (it is on your clipboard): "
