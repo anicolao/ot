@@ -5,20 +5,20 @@ environment:
 
 ```bash
 function catot {
-	curl https://raw.githubusercontent.com/anicolao/ot/main/$1
+  curl https://raw.githubusercontent.com/anicolao/ot/main/$1
 }
 
 function execot {
-	TMPFILE=$(mktemp)
-	catot $1 > $TMPFILE
-	shift
-	chmod +x $TMPFILE
-	$TMPFILE $*
-	rm $TMPFILE
+  TMPFILE=$(mktemp)
+  catot $1 > $TMPFILE
+  shift
+  chmod +x $TMPFILE
+  $TMPFILE $*
+  rm $TMPFILE
 }
 
 function ot {
-	execot bin/setup
+  execot bin/setup
 }
 ```
 
