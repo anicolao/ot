@@ -34,4 +34,12 @@ pbpaste
 echo
 echo "Logging into your cloudshell instance..."
 echo
-gcloud cloud-shell ssh --authorize-session
+if test -z "$SSH_AUTH_SOCK"
+then
+	echo "ssh agent is not running. Try: "
+	echo
+	echo agentup
+	echo ssh -A -F $SSH_CONFIG cloudshell
+else
+	ssh -A -F $SSH_CONFIG cloudshell
+fi
