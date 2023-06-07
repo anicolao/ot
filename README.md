@@ -5,7 +5,7 @@ environment:
 
 ```bash
 function catot {
-	curl https://raw.githubusercontent.com/anicolao/ot/$1
+	curl https://raw.githubusercontent.com/anicolao/ot/main/$1
 }
 
 function execot {
