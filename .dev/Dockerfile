@@ -1,4 +1,4 @@
-FROM ruby:3.2
+FROM ruby:3.2.2
 
 RUN apt-get update
 RUN apt-get -y install apt-utils ncompress vim
