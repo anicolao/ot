@@ -8,5 +8,3 @@ commands:
 # whereas others do not (e.g. compress), so we need to chop it off as required.
 nl_adders:
   - base64
-  - base64 -d
-  - cat # ??? to check ???

@@ -8,6 +8,12 @@ RSpec.describe 'base64' do
       .to be_operator('base64 -d')
       .with_content('dGVzdCBjb250ZW50')
   end
+
+  it 'produces the correct inverse also when the content contains a trailing newline' do
+    expect(pexec('bin/base64', "test content\n"))
+      .to be_operator('base64 -d')
+      .with_content('dGVzdCBjb250ZW50Cg==')
+  end
 end
 
 RSpec.describe 'base64 -d' do
@@ -15,5 +21,11 @@ RSpec.describe 'base64 -d' do
     expect(pexec('bin/base64 -d', 'dGVzdCBjb250ZW50'))
       .to be_operator('base64')
       .with_content('test content')
+  end
+
+  it 'produces the correct inverse also when the decoded content contains a trailing newline' do
+    expect(pexec('bin/base64 -d', 'dGVzdCBjb250ZW50Cg=='))
+      .to be_operator('base64')
+      .with_content("test content\n")
   end
 end
