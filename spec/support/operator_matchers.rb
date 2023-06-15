@@ -20,6 +20,9 @@ RSpec::Matchers.define :be_operator do |expected_op_cmd|
     unless (op_cmd == expected_op_cmd)
       @errors << "Expected operator to be #{expected_op_cmd.inspect} but found #{op_cmd.inspect}"
     end
+    unless @args
+      @errors << 'Expected args to be supplied to the matcher'
+    end
     unless (!@args || (op_args == @args))
       @errors << "Expected args to be #{@args.inspect} but found #{op_args.inspect}"
     end

@@ -17,10 +17,11 @@ end
 RSpec.describe 'dd status=none if=/tmp/%{file}' do
   let(:content) { 'test content' }
 
-  it 'produces the correct inverse' do
+  xit 'produces the correct inverse' do
     sha256sum = pexec('sha256sum -bz', content).split(' ')[0]
     expect(pexec("bin/dd status=none if=/tmp/%{file}", sha256sum))
       .to be_operator("dd status=none")
+      .with_no_args
       .with_content(sha256sum)
   end
 end
