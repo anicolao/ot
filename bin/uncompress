@@ -1,1 +1,14 @@
-operator
+#!/usr/bin/env ruby
+
+require_relative '../lib'
+
+uncompress_op = Operator2.new(name: 'uncompress', pipeline: ['uncompress'])
+compress_op = Operator2.new(name: 'compress', pipeline: ['compress'])
+
+Cmds::Generic.exec2(
+  fwd_op: uncompress_op,
+  fwd_args: {},
+  input_stream: $stdin.binmode,
+  inv_op: compress_op,
+  inv_args: {}
+)

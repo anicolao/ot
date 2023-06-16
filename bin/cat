@@ -1,1 +1,13 @@
-operator
+#!/usr/bin/env ruby
+
+require_relative '../lib'
+
+cat_op = Operator2.new(name: 'cat', pipeline: ['cat'])
+
+Cmds::Generic.exec2(
+  fwd_op: cat_op,
+  fwd_args: {},
+  input_stream: $stdin.binmode,
+  inv_op: cat_op,
+  inv_args: {}
+)
