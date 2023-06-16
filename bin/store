@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib'
+
+STORAGE_DIR = "#{ENV['HOME'].chomp('/')}/.ot/"
+
+cmd_name = File.basename($PROGRAM_NAME)
+
+op = if cmd_name == 'fetch'
+  sha256sum = ARGV[0]
+  cmd_to_exec = "dd status=none if=#{STORAGE_DIR}%{sha256sum}"
+  content = `#{cmd_to_exec % {sha256sum: sha256sum}}`
+  Operator.new(
+    cmd: 'fetch %{sha256sum}',
+    cmd_to_exec: cmd_to_exec,
+    args: {sha256sum: sha256sum},
+    content: content
+  )
+else
+  content = $stdin.binmode.read
+  sha256sum = IO.popen('sha256sum', 'r+') do |pipe|
+    pipe.write(content)
+    pipe.close_write
+    pipe.read
+  end.split(' ')[0]
+
+  File.open("#{STORAGE_DIR}#{sha256sum}", 'wb') do |f|
+    f.write(content)
+  end
+
+  Operator.new(
+    cmd: 'store',
+    cmd_to_exec: "dd status=none",
+    args: {sha256sum: sha256sum},
+    content: ''
+  )
+end
+$stdout.write(op.serialize)
