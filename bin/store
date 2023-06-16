@@ -8,11 +8,11 @@ cmd_name = File.basename($PROGRAM_NAME)
 
 op = if cmd_name == 'fetch'
   sha256sum = ARGV[0]
-  cmd_to_exec = "dd status=none if=#{STORAGE_DIR}%{sha256sum}"
-  content = `#{cmd_to_exec % {sha256sum: sha256sum}}`
+  cmd = "dd status=none if=#{STORAGE_DIR}%{sha256sum}"
+  content = `#{cmd % {sha256sum: sha256sum}}`
   Operator.new(
     name: 'fetch %{sha256sum}',
-    cmd_to_exec: cmd_to_exec,
+    cmd: cmd,
     args: {sha256sum: sha256sum},
     content: content
   )
@@ -30,7 +30,7 @@ else
 
   Operator.new(
     name: 'store',
-    cmd_to_exec: "dd status=none",
+    cmd: "dd status=none",
     args: {sha256sum: sha256sum},
     content: ''
   )

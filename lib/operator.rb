@@ -5,11 +5,11 @@ require 'yaml'
 class Operator
   MAGIC_MARKER = '>><<'
 
-  attr_reader :name, :cmd_to_exec, :args, :content_len, :content
+  attr_reader :name, :cmd, :args, :content_len, :content
 
-  def initialize(name:, cmd_to_exec: nil, args: {}, content:)
+  def initialize(name:, cmd: nil, args: {}, content:)
     @name = name
-    @cmd_to_exec = cmd_to_exec || name
+    @cmd = cmd || name
     @args = args
     @content_len = content.bytes.length
     @content = content
@@ -25,7 +25,7 @@ class Operator
   end
 
   def exec
-    parameterized_cmd = cmd_to_exec % args
+    parameterized_cmd = cmd % args
     result = IO.popen(parameterized_cmd, 'r+') do |pipe|
       pipe.write(content)
       pipe.close_write
