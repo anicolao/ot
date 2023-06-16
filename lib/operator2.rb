@@ -14,9 +14,9 @@ class Operator2
   end
 
   def serialize(args:, content:)
-    serialized_args = serialized_hash(args)
-    serialized_pipeline = serialized_array(pipeline)
-    "#{MAGIC_MARKER}#{serialized_string(name)}#{serialized_pipeline}#{serialized_args}#{serialized_string(content)}"
+    serialized_args = self.class.serialized_hash(args)
+    serialized_pipeline = self.class.serialized_array(pipeline)
+    "#{MAGIC_MARKER}#{self.class.serialized_string(name)}#{serialized_pipeline}#{serialized_args}#{self.class.serialized_string(content)}"
   end
 
   def exec(args:, input_stream:)
@@ -30,56 +30,60 @@ class Operator2
     end
   end
 
-  private
+  class << self
+    def hydrate(stream:)
+      return nil if stream.eof
 
-  def serialized_array(array)
-    "#{[array.count].pack('C')}#{array.map { |el| serialized_string(el) }.join}"
+      magic_marker = get_marker(stream)
+      raise ArgumentError, 'Magic marker not found' unless magic_marker == MAGIC_MARKER
+
+      name = get_string(stream)
+      pipeline = get_pipeline(stream)
+      args = get_args(stream)
+      content = get_string(stream)
+
+      [new(name: name, pipeline: pipeline), args, content]
+    end
+
+    def is_operator_content?(content)
+      content.start_with?(MAGIC_MARKER)
+    end
+
+    def serialized_array(array)
+      "#{[array.count].pack('C')}#{array.map { |el| serialized_string(el) }.join}"
+    end
+
+    def serialized_hash(hash)
+      "#{[hash.count].pack('C')}#{hash.map { |k, v| "#{serialized_string(k)}#{serialized_string(v)}" }.join}"
+    end
+
+    def serialized_string(s)
+      len = s.bytes.length
+      ([len] + s.bytes).pack("LC#{len}")
+    end
+
+    def get_marker(stream)
+      stream.read(4)
+    end
+
+    def get_pipeline(stream)
+      array_count = stream.read(1).unpack('C')[0]
+      array_count.times.map { get_string(stream) }
+    end
+
+    def get_args(stream)
+      array_count = stream.read(1).unpack('C')[0]
+      array_count.times.reduce({}) do |_, acc|
+        key = get_string(stream)
+        value = get_string(stream)
+        acc[key] = value
+        acc
+      end
+    end
+
+    def get_string(stream)
+      len = stream.read(4).unpack('L')[0]
+      stream.read(len)
+    end
   end
-
-  def serialized_hash(hash)
-    "#{[hash.count].pack('C')}#{hash.map { |k, v| "#{serialized_string(k)}#{serialized_string(v)}" }.join}"
-  end
-
-  def serialized_string(s)
-    len = s.bytes.length
-    ([len] + s.bytes).pack("LC#{len}")
-  end
-
-  #def inverse_cmd
-  #  commands = self.class.operators_config['commands']
-  #  command = commands.select { |f, _| f.start_with?(name) }
-  #  command = commands.invert.select { |f, _| f.start_with?(name) } if command.empty?
-#
-#    raise ArgumentError, "Unknown command '#{name}'" if command.empty?
-#
-#    command.values[0]
-#  end
-
-#  class << self
-#    def is_operator_content?(content)
-#      content.start_with?('>><<')
-#    end
-#
-#    def deserialize(from: STDIN)
-#      return nil if from.eof
-#
-#      magic_marker = from.read(4)
-#      raise ArgumentError, 'Magic marker not found' unless magic_marker == MAGIC_MARKER
-#
-#      name = from.gets(':').chomp(':')
-#      args = from.gets(':').chomp(':').split(';').reduce({}) do |acc, kv|
-#        split = kv.split('=')
-#        acc[split[0].to_sym] = split[1..-1].join
-#        acc
-#      end
-#      content_len = from.gets(':').chomp(':').to_i
-#      content = from.read(content_len)
-#
-#      new(name: name, args: args, content: content)
-#    end
-
-    #def operators_config
-    #  @operators_config ||= YAML.load(File.read(File.join(File.dirname(__FILE__), '../bin/operators.yml')))
-    #end
-#  end
 end

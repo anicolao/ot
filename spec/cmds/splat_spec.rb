@@ -3,25 +3,18 @@
 require 'spec_helper'
 
 RSpec.describe Cmds::Splat do
-  let(:op1) { Operator.new(name: 'cat', content: "test content 1") }
-  let(:op2) { Operator.new(name: 'cat', content: "test content 2") }
-  let(:op3) { Operator.new(name: 'base64', content: "test content 3") }
-  let(:op4) { Operator.new(name: 'dd status=none if=%{dir}%{file}', args: {file: 'abc'}, content: "test content 3") }
-
-  let(:r_op1) { Operator.new(name: 'base64', content: op1.serialize) }
-  let(:r_op2) { Operator.new(name: 'base64', content: op2.serialize) }
-  let(:r_op3) { Operator.new(name: 'base64', content: op3.serialize) }
-  let(:r_op4) { Operator.new(name: 'compress', content: r_op1.serialize) }
-  let(:r_op5) { Operator.new(name: 'compress', content: r_op2.serialize) }
-  let(:r_op6) { Operator.new(name: 'compress', content: r_op3.serialize) }
-  let(:r_op7) {
-    Operator.new(name: 'base64', content: "#{r_op4.serialize}#{r_op5.serialize}#{r_op6.serialize}")
-  }
-  let(:r_op8) { Operator.new(name: 'compress', content: r_op7.serialize) }
-
   describe '.exec' do
+    let(:content) {
+      [
+        'hello world 0',
+        'hello world 1',
+        'hello world 3',
+      ]
+    }
+
     it 'properly handles a single non-recursive operation' do
-      expect{described_class.exec(op1.serialize)}.to output(op1.content).to_stdout
+      serialized_input = pexec('bin/base64_e', content[0])
+      expect{described_class.exec(StringIO.new(serialized_input))}.to output(content[0]).to_stdout
     end
 
     xit 'properly handles operations with arguments' do
@@ -29,28 +22,30 @@ RSpec.describe Cmds::Splat do
     end
 
     it 'properly handles multiple non-recursive operations' do
+      serialized_input_0 = pexec('bin/base64_e', content[0])
+      serialized_input_1 = pexec('bin/base64_e', content[1])
+      serialized_input_2 = pexec('bin/base64_e', content[2])
+
       expect{described_class.exec(
-        "#{op1.serialize}#{op2.serialize}#{op3.serialize}"
+        StringIO.new("#{serialized_input_0}#{serialized_input_1}#{serialized_input_2}")
       )}.to output(
-        "#{op1.content}#{op2.content}#{op3.content}"
+        "#{content[0]}#{content[1]}#{content[2]}"
       ).to_stdout
     end
 
     it 'properly handles a single recursive operations' do
-      expect{described_class.exec(r_op1.serialize)}.to output(op1.content).to_stdout
+      r_serialized_input = pexec('bin/base64_e', pexec('bin/base64_e', content[0]))
+      expect{described_class.exec(StringIO.new(r_serialized_input))}.to output(content[0]).to_stdout
     end
 
     it 'properly handles multiple recursive operations' do
+      r_serialized_input_0 = pexec('bin/base64_e', pexec('bin/base64_e', content[0]))
+      r_serialized_input_1 = pexec('bin/base64_e', pexec('bin/base64_e', content[1]))
       expect{described_class.exec(
-        "#{r_op4.serialize}#{r_op5.serialize}#{r_op6.serialize}#{r_op8.serialize}"
+        StringIO.new("#{r_serialized_input_0}#{r_serialized_input_1}")
       )}.to output(
-        "#{op1.content}#{op2.content}#{op3.content}#{op1.content}#{op2.content}#{op3.content}"
+        "#{content[0]}#{content[1]}"
       ).to_stdout
     end
-
-    it 'properly handles IO streams' do
-      expect{described_class.exec(StringIO.new(op1.serialize))}.to output(op1.content).to_stdout
-    end
-
   end
 end
