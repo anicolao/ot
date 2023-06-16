@@ -5,11 +5,12 @@ require 'yaml'
 class Operator
   MAGIC_MARKER = '>><<'
 
-  attr_reader :name, :cmd, :args, :content_len, :content
+  attr_reader :name, :cmd, :cmd_adds_nl, :args, :content_len, :content
 
-  def initialize(name:, cmd: nil, args: {}, content:)
+  def initialize(name:, cmd: nil, cmd_adds_nl: false, args: {}, content:)
     @name = name
     @cmd = cmd || name
+    @cmd_adds_nl = cmd_adds_nl
     @args = args
     @content_len = content.bytes.length
     @content = content
@@ -31,7 +32,7 @@ class Operator
       pipe.close_write
       pipe.read
     end
-    nl_adders.include?(name) ? result.chomp("\n") : result
+    cmd_adds_nl ? result.chomp("\n") : result
   end
 
   private
@@ -44,10 +45,6 @@ class Operator
     raise ArgumentError, "Unknown command '#{name}'" if command.empty?
 
     command.values[0]
-  end
-
-  def nl_adders
-    self.class.operators_config['nl_adders']
   end
 
   class << self

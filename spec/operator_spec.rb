@@ -11,18 +11,16 @@ RSpec.describe Operator do
         test_op: test_inv_op
         test_op_nl: test_inv_op_nl
         test_op_with_param %{param1}: test_inv_op_with_param %{param1}
-
-      nl_adders:
-        - test_op_nl
       EOS
   end
 
   let(:content) { 'test content' }
   let(:op_name) { 'test op name' }
+  let(:cmd_adds_nl) { false }
   let(:output) { 'test output' }
   let(:args) { {arg1: 123} }
 
-  subject { described_class.new(name: op_name, args: args, content: content) }
+  subject { described_class.new(name: op_name, cmd_adds_nl: cmd_adds_nl, args: args, content: content) }
 
   before(:each) do
     allow(described_class).to receive(:operators_config).and_return(config)
@@ -41,6 +39,8 @@ RSpec.describe Operator do
       end
 
       context "when newline shouldn't be removed" do
+        let(:cmd_adds_nl) { false }
+
         it 'returns the command output untouched' do
           pipe = spy('pipe')
           allow(IO).to receive(:popen).with(op_name, 'r+').and_yield(pipe)
@@ -53,6 +53,7 @@ RSpec.describe Operator do
       context 'when newline should be removed' do
         let(:op_name) { 'test_op_nl' }
         let(:output) { "content with newline\n" }
+        let(:cmd_adds_nl) { true }
 
         it 'returns the command output with trailing newline removed' do
           pipe = spy('pipe')

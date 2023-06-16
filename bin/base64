@@ -1,1 +1,11 @@
-operator
+#!/usr/bin/env ruby
+
+require_relative '../lib'
+
+is_encode = ARGV.none? { |arg| arg == '-d' }
+
+Cmds::Generic.exec(
+  name: "#{File.basename($PROGRAM_NAME)} #{ARGV.join(' ')}".strip,
+  cmd_adds_nl: is_encode,
+  content: $stdin.binmode.read
+)
