@@ -11,7 +11,7 @@ op = if cmd_name == 'fetch'
   cmd_to_exec = "dd status=none if=#{STORAGE_DIR}%{sha256sum}"
   content = `#{cmd_to_exec % {sha256sum: sha256sum}}`
   Operator.new(
-    cmd: 'fetch %{sha256sum}',
+    name: 'fetch %{sha256sum}',
     cmd_to_exec: cmd_to_exec,
     args: {sha256sum: sha256sum},
     content: content
@@ -29,7 +29,7 @@ else
   end
 
   Operator.new(
-    cmd: 'store',
+    name: 'store',
     cmd_to_exec: "dd status=none",
     args: {sha256sum: sha256sum},
     content: ''

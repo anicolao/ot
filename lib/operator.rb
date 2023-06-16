@@ -5,11 +5,11 @@ require 'yaml'
 class Operator
   MAGIC_MARKER = '>><<'
 
-  attr_reader :cmd, :cmd_to_exec, :args, :content_len, :content
+  attr_reader :name, :cmd_to_exec, :args, :content_len, :content
 
-  def initialize(cmd:, cmd_to_exec: nil, args: {}, content:)
-    @cmd = cmd
-    @cmd_to_exec = cmd_to_exec || cmd
+  def initialize(name:, cmd_to_exec: nil, args: {}, content:)
+    @name = name
+    @cmd_to_exec = cmd_to_exec || name
     @args = args
     @content_len = content.bytes.length
     @content = content
@@ -31,17 +31,17 @@ class Operator
       pipe.close_write
       pipe.read
     end
-    nl_adders.include?(cmd) ? result.chomp("\n") : result
+    nl_adders.include?(name) ? result.chomp("\n") : result
   end
 
   private
 
   def inverse_cmd
     commands = self.class.operators_config['commands']
-    command = commands.select { |f, _| f.start_with?(cmd) }
-    command = commands.invert.select { |f, _| f.start_with?(cmd) } if command.empty?
+    command = commands.select { |f, _| f.start_with?(name) }
+    command = commands.invert.select { |f, _| f.start_with?(name) } if command.empty?
 
-    raise ArgumentError, "Unknown command '#{cmd}'" if command.empty?
+    raise ArgumentError, "Unknown command '#{name}'" if command.empty?
 
     command.values[0]
   end
@@ -61,7 +61,7 @@ class Operator
       magic_marker = from.read(4)
       raise ArgumentError, 'Magic marker not found' unless magic_marker == MAGIC_MARKER
 
-      cmd = from.gets(':').chomp(':')
+      name = from.gets(':').chomp(':')
       args = from.gets(':').chomp(':').split(';').reduce({}) do |acc, kv|
         split = kv.split('=')
         acc[split[0].to_sym] = split[1..-1].join
@@ -70,7 +70,7 @@ class Operator
       content_len = from.gets(':').chomp(':').to_i
       content = from.read(content_len)
 
-      new(cmd: cmd, args: args, content: content)
+      new(name: name, args: args, content: content)
     end
 
     def operators_config

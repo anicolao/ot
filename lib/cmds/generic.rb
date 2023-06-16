@@ -3,21 +3,21 @@
 module Cmds
   class Generic
     class << self
-      def exec(cmd:, content:)
-        new(cmd: cmd, content: content).send(:output)
+      def exec(name:, content:)
+        new(name: name, content: content).send(:output)
       end
     end
 
     private
 
-    def initialize(cmd:, content:)
-      @cmd = cmd
+    def initialize(name:, content:)
+      @name = name
       @content = content
     end
     private_class_method :new
 
     def output
-      op = ::Operator.new(cmd: @cmd, content: @content)
+      op = ::Operator.new(name: @name, content: @content)
       $stdout.binmode.write(op.serialize)
     end
   end

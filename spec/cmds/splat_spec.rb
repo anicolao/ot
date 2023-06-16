@@ -3,21 +3,21 @@
 require 'spec_helper'
 
 RSpec.describe Cmds::Splat do
-  let(:op1) { Operator.new(cmd: 'cat', content: "test content 1") }
-  let(:op2) { Operator.new(cmd: 'cat', content: "test content 2") }
-  let(:op3) { Operator.new(cmd: 'base64', content: "test content 3") }
-  let(:op4) { Operator.new(cmd: 'dd status=none if=%{dir}%{file}', args: {file: 'abc'}, content: "test content 3") }
+  let(:op1) { Operator.new(name: 'cat', content: "test content 1") }
+  let(:op2) { Operator.new(name: 'cat', content: "test content 2") }
+  let(:op3) { Operator.new(name: 'base64', content: "test content 3") }
+  let(:op4) { Operator.new(name: 'dd status=none if=%{dir}%{file}', args: {file: 'abc'}, content: "test content 3") }
 
-  let(:r_op1) { Operator.new(cmd: 'base64', content: op1.serialize) }
-  let(:r_op2) { Operator.new(cmd: 'base64', content: op2.serialize) }
-  let(:r_op3) { Operator.new(cmd: 'base64', content: op3.serialize) }
-  let(:r_op4) { Operator.new(cmd: 'compress', content: r_op1.serialize) }
-  let(:r_op5) { Operator.new(cmd: 'compress', content: r_op2.serialize) }
-  let(:r_op6) { Operator.new(cmd: 'compress', content: r_op3.serialize) }
+  let(:r_op1) { Operator.new(name: 'base64', content: op1.serialize) }
+  let(:r_op2) { Operator.new(name: 'base64', content: op2.serialize) }
+  let(:r_op3) { Operator.new(name: 'base64', content: op3.serialize) }
+  let(:r_op4) { Operator.new(name: 'compress', content: r_op1.serialize) }
+  let(:r_op5) { Operator.new(name: 'compress', content: r_op2.serialize) }
+  let(:r_op6) { Operator.new(name: 'compress', content: r_op3.serialize) }
   let(:r_op7) {
-    Operator.new(cmd: 'base64', content: "#{r_op4.serialize}#{r_op5.serialize}#{r_op6.serialize}")
+    Operator.new(name: 'base64', content: "#{r_op4.serialize}#{r_op5.serialize}#{r_op6.serialize}")
   }
-  let(:r_op8) { Operator.new(cmd: 'compress', content: r_op7.serialize) }
+  let(:r_op8) { Operator.new(name: 'compress', content: r_op7.serialize) }
 
   describe '.exec' do
     it 'properly handles a single non-recursive operation' do

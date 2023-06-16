@@ -3,6 +3,6 @@
 require_relative '../lib'
 
 Cmds::Generic.exec(
-  cmd: "#{File.basename($PROGRAM_NAME)} #{ARGV.join(' ')}".strip,
+  name: "#{File.basename($PROGRAM_NAME)} #{ARGV.join(' ')}".strip,
   content: $stdin.binmode.read
 )
