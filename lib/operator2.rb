@@ -54,7 +54,7 @@ class Operator2
     end
 
     def serialized_hash(hash)
-      "#{[hash.count].pack('C')}#{hash.map { |k, v| "#{serialized_string(k)}#{serialized_string(v)}" }.join}"
+      "#{[hash.count].pack('C')}#{hash.map { |k, v| "#{serialized_string(k.to_s)}#{serialized_string(v)}" }.join}"
     end
 
     def serialized_string(s)
@@ -73,8 +73,8 @@ class Operator2
 
     def get_args(stream)
       array_count = stream.read(1).unpack('C')[0]
-      array_count.times.reduce({}) do |_, acc|
-        key = get_string(stream)
+      array_count.times.reduce({}) do |acc, _|
+        key = get_string(stream).to_sym
         value = get_string(stream)
         acc[key] = value
         acc

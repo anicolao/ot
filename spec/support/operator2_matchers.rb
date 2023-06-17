@@ -58,8 +58,8 @@ RSpec::Matchers.define :be_operator2 do |expected_op_name|
 
   def get_args(stream)
     array_count = stream.read(1).unpack('C')[0]
-    array_count.times.reduce({}) do |_, acc|
-      key = get_string(stream)
+    array_count.times.reduce({}) do |acc, _|
+      key = get_string(stream).to_sym
       value = get_string(stream)
       acc[key] = value
       acc

@@ -18,7 +18,7 @@ module Cmds
 
             result = op.exec(args: args, input_stream: content_stream)
             $stdout.binmode.write(
-              if Operator.is_operator_content?(result)
+              if Operator2.is_operator_content?(result)
                 exec(StringIO.new(result).binmode)
               else
                 result
