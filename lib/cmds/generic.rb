@@ -3,7 +3,7 @@
 module Cmds
   class Generic
     class << self
-      def exec2(
+      def exec(
         fwd_op:, fwd_args:, input_stream:,
         inv_op:, inv_args:
       )

@@ -5,7 +5,7 @@ require_relative '../lib'
 compress_op = Operator.new(name: 'compress', pipeline: ['compress'])
 uncompress_op = Operator.new(name: 'uncompress', pipeline: ['uncompress'])
 
-Cmds::Generic.exec2(
+Cmds::Generic.exec(
   fwd_op: compress_op,
   fwd_args: {},
   input_stream: $stdin.binmode,

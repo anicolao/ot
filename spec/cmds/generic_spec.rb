@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe Cmds::Generic do
-  describe '.execs' do
+  describe '.exec' do
     let(:fwd_args) { {a: 1, b: 2} }
     let(:inv_args) { {x: 7, y: 8} }
 
@@ -22,7 +22,7 @@ RSpec.describe Cmds::Generic do
       expect($stdout).to receive(:binmode).and_return(binmode_stdout)
       expect(binmode_stdout).to receive(:write).with(serialized_inv_op)
 
-      described_class.exec2(
+      described_class.exec(
         fwd_op: fwd_op, fwd_args: fwd_args,
         input_stream: input_stream,
         inv_op: inv_op, inv_args: inv_args

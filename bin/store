@@ -8,7 +8,7 @@ temp_filename = "#{STORAGE_DIR}temp-#{Process.pid}"
 store_op = Operator.new(name: 'store', pipeline: ["tee #{temp_filename}", 'sha256sum -bz', "awk '{printf $1}'", 'tr -d "\n"'])
 fetch_op = Operator.new(name: 'fetch', pipeline: ["cat #{STORAGE_DIR}%{sha256sum}"])
 
-Cmds::Generic.exec2(
+Cmds::Generic.exec(
   fwd_op: store_op,
   fwd_args: {},
   input_stream: $stdin.binmode,
