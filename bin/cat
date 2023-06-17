@@ -2,7 +2,7 @@
 
 require_relative '../lib'
 
-cat_op = Operator2.new(name: 'cat', pipeline: ['cat'])
+cat_op = Operator.new(name: 'cat', pipeline: ['cat'])
 
 Cmds::Generic.exec2(
   fwd_op: cat_op,

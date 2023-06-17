@@ -8,7 +8,7 @@ module Cmds
     class << self
       def exec(input_stream)
         while true do
-          (op, args, content) = Operator2.hydrate(stream: input_stream.binmode)
+          (op, args, content) = Operator.hydrate(stream: input_stream.binmode)
           break unless op
 
           Tempfile.open do |content_stream|
@@ -18,7 +18,7 @@ module Cmds
 
             result = op.exec(args: args, input_stream: content_stream)
             $stdout.binmode.write(
-              if Operator2.is_operator_content?(result)
+              if Operator.is_operator_content?(result)
                 exec(StringIO.new(result).binmode)
               else
                 result

@@ -3,7 +3,7 @@
 require 'yaml'
 require 'open3'
 
-class Operator2
+class Operator
   MAGIC_MARKER = '>><<'
 
   attr_reader :name, :pipeline

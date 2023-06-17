@@ -5,8 +5,8 @@ require_relative '../lib'
 STORAGE_DIR = "#{ENV['HOME'].chomp('/')}/.ot/"
 
 temp_filename = "#{STORAGE_DIR}temp-#{Process.pid}"
-store_op = Operator2.new(name: 'store', pipeline: ["tee #{temp_filename}", 'sha256sum -bz', "awk '{printf $1}'", 'tr -d "\n"'])
-fetch_op = Operator2.new(name: 'fetch', pipeline: ["cat #{STORAGE_DIR}%{sha256sum}"])
+store_op = Operator.new(name: 'store', pipeline: ["tee #{temp_filename}", 'sha256sum -bz', "awk '{printf $1}'", 'tr -d "\n"'])
+fetch_op = Operator.new(name: 'fetch', pipeline: ["cat #{STORAGE_DIR}%{sha256sum}"])
 
 Cmds::Generic.exec2(
   fwd_op: store_op,

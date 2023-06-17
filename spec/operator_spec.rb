@@ -5,7 +5,7 @@ require 'stringio'
 require 'tempfile'
 require 'yaml'
 
-RSpec.describe Operator2 do
+RSpec.describe Operator do
   let(:op_name) { 'test op name' }
   let(:op_pipeline) { ['wc', "awk '{print $%{test_arg}}'", 'tr -d "\n"'] }
 
@@ -73,14 +73,14 @@ RSpec.describe Operator2 do
 
     it 'places the name in 2nd position (leading 4-byte count representing name length)' do
       expected_substring = serialized_string(op_name)
-      expected_position = Operator2::MAGIC_MARKER.bytes.length
+      expected_position = described_class::MAGIC_MARKER.bytes.length
       expect(result[expected_position..]).to start_with(expected_substring)
     end
 
     it 'places the pipeline in 3rd position (leading 1-byte count representing number of processes in the pipeline)' do
       expected_substring = serialized_array(op_pipeline)
       expected_position =
-        Operator2::MAGIC_MARKER.bytes.length +
+        described_class::MAGIC_MARKER.bytes.length +
         serialized_string(op_name).bytes.length
       expect(result[expected_position..]).to start_with(expected_substring)
     end
@@ -88,7 +88,7 @@ RSpec.describe Operator2 do
     it 'places the args in 4th position (leading 1-byte count representing number of arguments)' do
       expected_substring = serialized_hash(args)
       expected_position =
-        Operator2::MAGIC_MARKER.bytes.length +
+        described_class::MAGIC_MARKER.bytes.length +
         serialized_string(op_name).bytes.length +
         serialized_array(op_pipeline).bytes.length
       expect(result[expected_position..]).to start_with(expected_substring)
@@ -97,7 +97,7 @@ RSpec.describe Operator2 do
     it 'places the content in 5th position (leading 4-byte count representing content length)' do
       expected_substring = serialized_string(content)
       expected_position =
-        Operator2::MAGIC_MARKER.bytes.length +
+        described_class::MAGIC_MARKER.bytes.length +
         serialized_string(op_name).bytes.length +
         serialized_array(op_pipeline).bytes.length +
         serialized_hash(args).bytes.length
@@ -138,7 +138,7 @@ RSpec.describe Operator2 do
     it 'returns a 3-element array (operator, args, content)' do
       result = described_class.hydrate(stream: stream)
       expect(result.size).to eq(3)
-      expect(result[0]).to be_an(Operator2)
+      expect(result[0]).to be_an(described_class)
       expect(result[0].name).to eq(op_name)
       expect(result[0].pipeline).to eq(op_pipeline)
       expect(result[1]).to eq(args)
