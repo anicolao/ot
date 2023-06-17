@@ -7,7 +7,7 @@ module Cmds
   class Splat
     class << self
       def exec(input_stream)
-        while true do
+        loop do
           (op, args, content) = Operator.hydrate(stream: input_stream.binmode)
           break unless op
 
@@ -16,9 +16,9 @@ module Cmds
             content_stream.write(content)
             content_stream.rewind
 
-            result = op.exec(args: args, input_stream: content_stream)
+            result = op.exec(args:, input_stream: content_stream)
             $stdout.binmode.write(
-              if Operator.is_operator_content?(result)
+              if Operator.operator_content?(result)
                 exec(StringIO.new(result).binmode)
               else
                 result

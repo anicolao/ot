@@ -6,10 +6,10 @@ require 'tempfile'
 require 'yaml'
 
 RSpec.describe Operator do
-  let(:op_name) { 'test op name' }
-  let(:op_pipeline) { ['wc', "awk '{print $%{test_arg}}'", 'tr -d "\n"'] }
+  subject(:operator) { described_class.new(name: op_name, pipeline: op_pipeline) }
 
-  subject { described_class.new(name: op_name, pipeline: op_pipeline) }
+  let(:op_name) { 'test op name' }
+  let(:op_pipeline) { ['wc', "awk '{print $%<test_arg>s}'", 'tr -d "\n"'] }
 
   def with_file_containing(content)
     Tempfile.open do |f|
@@ -22,30 +22,29 @@ RSpec.describe Operator do
   describe '#exec' do
     it 'executes the pipeline' do
       with_file_containing('hello world') do |f|
-        expect(subject.exec(args: {test_arg: 2}, input_stream: f)).to eq('2')
+        expect(operator.exec(args: { test_arg: 2 }, input_stream: f)).to eq('2')
       end
     end
 
     it 'does the correct argument substitutions' do
       with_file_containing('zero lines because of no newline') do |f|
-        expect(subject.exec(args: {test_arg: 1}, input_stream: f)).to eq('0')
+        expect(operator.exec(args: { test_arg: 1 }, input_stream: f)).to eq('0')
       end
       with_file_containing('two words') do |f|
-        expect(subject.exec(args: {test_arg: 2}, input_stream: f)).to eq('2')
+        expect(operator.exec(args: { test_arg: 2 }, input_stream: f)).to eq('2')
       end
     end
 
     it 'feeds the input stream the first process in the pipeline' do
       with_file_containing('hello world') do |f|
-        expect(subject.exec(args: {test_arg: 2}, input_stream: f)).to eq('2')
+        expect(operator.exec(args: { test_arg: 2 }, input_stream: f)).to eq('2')
       end
       with_file_containing('one line with five words') do |f|
-        expect(subject.exec(args: {test_arg: 2}, input_stream: f)).to eq('5')
+        expect(operator.exec(args: { test_arg: 2 }, input_stream: f)).to eq('5')
       end
     end
 
-    xit 'properly handles pipeline errors' do
-    end
+    xit 'properly handles pipeline errors'
   end
 
   describe '#serialize' do
@@ -57,15 +56,15 @@ RSpec.describe Operator do
       "#{[hash.count].pack('C')}#{hash.map { |k, v| "#{serialized_string(k.to_s)}#{serialized_string(v)}" }.join}"
     end
 
-    def serialized_string(s)
-      s = s.to_s
-      len = s.bytes.length
-      ([len] + s.bytes).pack("LC#{len}")
+    def serialized_string(str)
+      str = str.to_s
+      len = str.bytes.length
+      ([len] + str.bytes).pack("LC#{len}")
     end
 
     let(:args) { { test_arg1: '1', test_arg2: '2' } }
     let(:content) { 'test content' }
-    let(:result) { subject.serialize(args: args, content: content) }
+    let(:result) { operator.serialize(args:, content:) }
 
     it 'places a magic marker at the head of the serialized string' do
       expect(result).to start_with(described_class::MAGIC_MARKER)
@@ -113,9 +112,9 @@ RSpec.describe Operator do
       it 'converts them to strings' do
         expect(result).to eq(
           described_class.new(
-            name: op_name.to_s, pipeline: op_pipeline.map { |p| p.to_s }
+            name: op_name.to_s, pipeline: op_pipeline.map(&:to_s)
           ).serialize(
-            args: args.transform_values { |v| v.to_s },
+            args: args.transform_values(&:to_s),
             content: content.to_s
           )
         )
@@ -126,30 +125,43 @@ RSpec.describe Operator do
   describe '.hydrate' do
     let(:args) { { test_arg1: '1', test_arg2: '2' } }
     let(:content) { 'test content' }
-    let(:serialized_input) { subject.serialize(args: args, content: content) }
+    let(:serialized_input) { operator.serialize(args:, content:) }
     let(:stream) { StringIO.new(serialized_input) }
 
     it 'returns nil if the stream is at EOF' do
-      stream = spy('stream')
+      stream = instance_spy(IO, 'stream')
       allow(stream).to receive(:eof).and_return(true)
-      expect(described_class.hydrate(stream: stream)).to be_nil
+      expect(described_class.hydrate(stream:)).to be_nil
     end
 
-    it 'returns a 3-element array (operator, args, content)' do
-      result = described_class.hydrate(stream: stream)
-      expect(result.size).to eq(3)
-      expect(result[0]).to be_an(described_class)
-      expect(result[0].name).to eq(op_name)
-      expect(result[0].pipeline).to eq(op_pipeline)
-      expect(result[1]).to eq(args)
-      expect(result[2]).to eq(content)
+    context 'when properly hydrated' do
+      it 'returns a 3-element array (operator, args, content)' do
+        result = described_class.hydrate(stream:)
+        expect(result.size).to eq(3)
+      end
+
+      it 'returns the correct operator' do
+        result = described_class.hydrate(stream:)
+        expect(result[0].name).to eq(op_name)
+        expect(result[0].pipeline).to eq(op_pipeline)
+      end
+
+      it 'returns the args' do
+        result = described_class.hydrate(stream:)
+        expect(result[1]).to eq(args)
+      end
+
+      it 'returns the content' do
+        result = described_class.hydrate(stream:)
+        expect(result[2]).to eq(content)
+      end
     end
 
     context 'when the magic marker is missing' do
       let(:stream) { StringIO.new('garbage') }
 
       it 'raises an error' do
-        expect{ described_class.hydrate(stream: stream) }.to raise_error(ArgumentError, 'Magic marker not found')
+        expect { described_class.hydrate(stream:) }.to raise_error(ArgumentError, 'Magic marker not found')
       end
     end
   end

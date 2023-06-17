@@ -7,6 +7,8 @@ source 'http://rubygems.org'
 group :development do
   gem 'byebug'
   gem 'rspec'
+  gem 'rubocop'
+  gem 'rubocop-rspec'
 end
 
 group :test do

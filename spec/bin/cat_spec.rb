@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 
+# rubocop:disable RSpec/DescribeClass
 RSpec.describe 'cat' do
   it 'produces the correct inverse' do
     expect(pexec('bin/cat', 'test content'))
@@ -19,3 +20,4 @@ RSpec.describe 'cat' do
       .with_content("test content\n")
   end
 end
+# rubocop:enable RSpec/DescribeClass

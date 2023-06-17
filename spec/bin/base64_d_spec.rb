@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 
+# rubocop:disable RSpec/DescribeClass
 RSpec.describe 'base64_d' do
   it 'produces the correct inverse' do
     expect(pexec('bin/base64_d', 'dGVzdCBjb250ZW50'))
@@ -19,3 +20,4 @@ RSpec.describe 'base64_d' do
       .with_content("test content\n")
   end
 end
+# rubocop:enable RSpec/DescribeClass
