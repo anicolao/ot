@@ -6,7 +6,7 @@ require 'spec_helper'
 RSpec.describe 'cat' do
   it 'produces the correct inverse' do
     expect(pexec('bin/cat', 'test content'))
-      .to be_operator2('cat')
+      .to be_operator('cat')
       .with_pipeline(['cat'])
       .with_no_args
       .with_content('test content')
@@ -14,7 +14,7 @@ RSpec.describe 'cat' do
 
   it 'produces the correct inverse also when the content contains a trailing newline' do
     expect(pexec('bin/cat', "test content\n"))
-      .to be_operator2('cat')
+      .to be_operator('cat')
       .with_pipeline(['cat'])
       .with_no_args
       .with_content("test content\n")

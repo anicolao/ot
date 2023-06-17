@@ -10,7 +10,7 @@ RSpec.describe 'store' do
   it 'produces the correct inverse' do
     sha256sum = pexec('sha256sum -bz', content).split[0]
     expect(pexec('bin/store', content))
-      .to be_operator2('fetch')
+      .to be_operator('fetch')
       .with_pipeline(["cat #{storage_dir}%<sha256sum>s"])
       .with_args(sha256sum:)
       .with_content('')

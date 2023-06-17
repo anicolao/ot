@@ -1,37 +1,78 @@
 # frozen_string_literal: true
 
-RSpec::Matchers.define :be_operator do |expected_op_cmd|
+RSpec::Matchers.define :be_operator do |expected_op_name|
   match do |bytestream|
-    sio = StringIO.new(bytestream).binmode
-    marker = sio.read(4)
-    op_cmd = sio.gets(':').chomp(':')
-    op_args = sio.gets(':').chomp(':').split(';').each_with_object({}) do |kv, acc|
-      split = kv.split('=')
-      acc[split[0].to_sym] = split[1..].join
-    end
-    op_content_len = sio.gets(':').chomp(':').to_i
-    op_content = sio.read(op_content_len)
-
     @errors = []
-    @errors << 'Invalid operator: missing expected marker' unless marker == '>><<'
-    unless op_cmd == expected_op_cmd
-      @errors << "Expected operator to be #{expected_op_cmd.inspect} but found #{op_cmd.inspect}"
+
+    unless @args
+      @errors << 'Expected args value to be tested for explicitly.'
+      return false
     end
-    @errors << 'Expected args value to be tested for explicitly.' unless @args
-    @errors << "Expected args to be #{@args.inspect} but found #{op_args.inspect}" unless !@args || (op_args == @args)
-    unless !@content_len || (op_content_len == @content_len)
-      @errors << "Expected content_len to be #{@content_len.inspect} but found #{op_content_len.inspect}"
+
+    sio = StringIO.new(bytestream).binmode
+    marker = get_marker(sio)
+    unless marker == '>><<'
+      @errors << 'Invalid operator: missing expected marker'
+      return false
     end
+
+    op_name = get_string(sio)
+    unless op_name == expected_op_name
+      @errors << "Expected operator to be #{expected_op_name} but found #{op_name}"
+      return false
+    end
+
+    op_pipeline = get_pipeline(sio)
+    unless op_pipeline == @pipeline
+      @errors << "Expected pipeline to be #{@pipeline.inspect} but found #{op_pipeline.inspect}"
+      return false
+    end
+
+    op_args = get_args(sio)
+    unless !@args || (op_args == @args)
+      @errors << "Expected args to be #{@args.inspect} but found #{op_args.inspect}"
+      return false
+    end
+
+    op_content = get_string(sio)
     unless !@content || (op_content.unpack('c*') == @content.unpack('c*'))
       @errors << "Expected content to be #{@content.inspect} but found #{op_content.inspect}"
+      return false
     end
-    @errors.empty?
+
+    true
   end
 
   failure_message do
-    <<~MESSAGE
-      #{@errors.join("\n")}
-    MESSAGE
+    @errors.join("\n")
+  end
+
+  def get_marker(stream)
+    stream.read(4)
+  end
+
+  def get_pipeline(stream)
+    array_count = stream.read(1).unpack1('C')
+    array_count.times.map { get_string(stream) }
+  end
+
+  def get_args(stream)
+    array_count = stream.read(1).unpack1('C')
+    array_count.times.each_with_object({}) do |_, acc|
+      key = get_string(stream).to_sym
+      value = get_string(stream)
+      acc[key] = value
+    end
+  end
+
+  def get_string(stream)
+    len = stream.read(4).unpack1('L')
+    stream.read(len)
+  end
+
+  def with_pipeline(pipeline)
+    @pipeline = pipeline
+    self
   end
 
   def with_no_args
