@@ -17,10 +17,6 @@ RSpec.describe Cmds::Splat do
       expect{described_class.exec(StringIO.new(serialized_input))}.to output(content[0]).to_stdout
     end
 
-    xit 'properly handles operations with arguments' do
-      expect{described_class.exec(op4.serialize)}.to output(op4.content).to_stdout
-    end
-
     it 'properly handles multiple non-recursive operations' do
       serialized_input_0 = pexec('bin/base64_e', content[0])
       serialized_input_1 = pexec('bin/base64_e', content[1])
