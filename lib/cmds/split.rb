@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+=begin
 require 'stringio'
 
 module Cmds
@@ -30,3 +31,4 @@ module Cmds
     private_class_method :new
   end
 end
+=end
