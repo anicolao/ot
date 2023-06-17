@@ -2,4 +2,4 @@
 
 require_relative '../lib'
 
-Cmds::Split.exec(STDIN.binmode, strategy: Cmds::Split::Strategy::Block, size: 5)
+Cmds::Split.exec(input_stream: $stdin.binmode, strategy: Cmds::Split::Strategy::FixedBlockSize, size: 5)

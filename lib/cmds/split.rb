@@ -1,34 +1,39 @@
 # frozen_string_literal: true
 
-=begin
-require 'stringio'
-
 module Cmds
   class Split
     class Strategy
-      class Block
+      class FixedBlockSize
         def initialize(size:)
           @size = size
         end
 
-        def yielder(input_stream:)
-          while block=input_stream.read(@size)
-            yield block
+        def split(input_stream:)
+          splitter = Operator.new(name: 'block_splitter', pipeline: ["split -b #{@size} -d - \"#{file_prefix}\""])
+          splitter.exec(args: {}, input_stream: input_stream)
+          Dir.glob("#{file_prefix}*").sort.each do |filename|
+            File.open(filename) do |stream|
+              yield stream
+            end
+            File.unlink(filename)
           end
+        end
+
+        private
+
+        def file_prefix
+          "/tmp/split.#{Process.pid}."
         end
       end
     end
 
-    class << self
-      def exec(input, strategy: Strategy::Block, **params)
-        input_stream = input.is_a?(String) ? StringIO.new(input) : input
-        strategy.new(**params).yielder(input_stream: input_stream) do |block|
-          $stdout.binmode.write(Operator.new(cmd: 'cat', content: block).serialize)
-        end
+
+    def self.exec(input_stream:, strategy: Strategy::FixedBlockSize, **params)
+      strategy.new(**params).split(input_stream: input_stream) do |partial_input_stream|
+        Cmds::Store.exec(input_stream: partial_input_stream)
       end
     end
 
     private_class_method :new
   end
 end
-=end
