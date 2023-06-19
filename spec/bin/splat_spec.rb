@@ -5,7 +5,7 @@ require 'spec_helper'
 # rubocop:disable RSpec/DescribeClass
 RSpec.describe 'splat' do
   it 'execs the Splat command with STDIN in binmode' do
-    expect(Cmds::Splat).to receive(:exec).with($stdin.binmode)
+    expect(Cmds::Splat).to receive(:exec).with(input_stream: $stdin.binmode)
     load('bin/splat')
   end
 end

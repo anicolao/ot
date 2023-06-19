@@ -3,4 +3,4 @@
 
 require_relative '../lib'
 
-Cmds::Splat.exec($stdin.binmode)
+Cmds::Splat.exec(input_stream: $stdin.binmode)

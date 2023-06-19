@@ -6,7 +6,7 @@ require 'tempfile'
 module Cmds
   class Splat
     class << self
-      def exec(input_stream)
+      def exec(input_stream:)
         loop do
           (op, args, content) = Operator.hydrate(stream: input_stream.binmode)
           break unless op
@@ -19,7 +19,7 @@ module Cmds
             result = op.exec(args:, input_stream: content_stream)
             $stdout.binmode.write(
               if Operator.operator_content?(result)
-                exec(StringIO.new(result).binmode)
+                exec(input_stream: StringIO.new(result).binmode)
               else
                 result
               end

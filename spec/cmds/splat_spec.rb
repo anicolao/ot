@@ -14,7 +14,7 @@ RSpec.describe Cmds::Splat do
 
     it 'properly handles a single non-recursive operation' do
       serialized_input = pexec('bin/base64_e', content[0])
-      expect { described_class.exec(StringIO.new(serialized_input)) }.to output(content[0]).to_stdout
+      expect { described_class.exec(input_stream: StringIO.new(serialized_input)) }.to output(content[0]).to_stdout
     end
 
     it 'properly handles multiple non-recursive operations' do
@@ -24,7 +24,7 @@ RSpec.describe Cmds::Splat do
 
       expect do
         described_class.exec(
-          StringIO.new("#{serialized_input0}#{serialized_input1}#{serialized_input2}")
+          input_stream: StringIO.new("#{serialized_input0}#{serialized_input1}#{serialized_input2}")
         )
       end.to output(
         "#{content[0]}#{content[1]}#{content[2]}"
@@ -33,7 +33,7 @@ RSpec.describe Cmds::Splat do
 
     it 'properly handles a single recursive operations' do
       r_serialized_input = pexec('bin/base64_e', pexec('bin/base64_e', content[0]))
-      expect { described_class.exec(StringIO.new(r_serialized_input)) }.to output(content[0]).to_stdout
+      expect { described_class.exec(input_stream: StringIO.new(r_serialized_input)) }.to output(content[0]).to_stdout
     end
 
     it 'properly handles multiple recursive operations' do
@@ -41,7 +41,7 @@ RSpec.describe Cmds::Splat do
       r_serialized_input1 = pexec('bin/base64_e', pexec('bin/base64_e', content[1]))
       expect do
         described_class.exec(
-          StringIO.new("#{r_serialized_input0}#{r_serialized_input1}")
+          input_stream: StringIO.new("#{r_serialized_input0}#{r_serialized_input1}")
         )
       end.to output(
         "#{content[0]}#{content[1]}"
