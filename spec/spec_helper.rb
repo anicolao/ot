@@ -87,4 +87,13 @@ RSpec.configure do |config|
   config.order = :random
 
   Kernel.srand config.seed
+
+  config.around :each do |each|
+    Dir.mktmpdir do |dir|
+      old_home_dir = ENV['HOME']
+      ENV['HOME'] = dir
+      each.run
+      ENV['HOME'] = old_home_dir
+    end
+  end
 end
