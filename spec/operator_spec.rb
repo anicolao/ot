@@ -9,7 +9,7 @@ RSpec.describe Operator do
   subject(:operator) { described_class.new(name: op_name, pipeline: op_pipeline) }
 
   let(:op_name) { 'test op name' }
-  let(:op_pipeline) { ['wc', "awk '{print $%<test_arg>s}'", 'tr -d "\n"'] }
+  let(:op_pipeline) { ['wc', "awk '{printf \"%%s\", $%<test_arg>s}'"] }
 
   def with_file_containing(content)
     Tempfile.open do |f|
