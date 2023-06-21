@@ -42,15 +42,6 @@ RSpec.describe Cmds::Split do
       described_class.exec(input_stream: @input_stream, strategy: test_strategy_class, p1: 1, p2: 2)
     end
 
-    def capture_stdout(&blk)
-      old = $stdout
-      $stdout = fake = StringIO.new
-      blk.call
-      fake.string
-    ensure
-      $stdout = old
-    end
-
     it "outputs the result of Store operations for each section of content" do
       size = 5
       expected_output = capture_stdout do
