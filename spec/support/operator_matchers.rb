@@ -40,6 +40,11 @@ RSpec::Matchers.define :be_operator do |expected_op_name|
       return false
     end
 
+    unless sio.eof
+      @errors << "Found unexpected additional trailing content (#{sio.read})"
+      return false
+    end
+
     true
   end
 
