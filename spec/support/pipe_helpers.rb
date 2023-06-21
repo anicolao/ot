@@ -20,6 +20,10 @@ module PipeHelpers
     if exit_status == 0
       result_out
     else
+      $stderr.puts "Error executing #{cmd.inspect}"
+      $stderr.puts " >> exit status: #{exit_status.inspect}"
+      $stderr.puts " >> stdout: #{result_out}"
+      $stderr.puts " >> stderr: #{result_err}"
       [exit_status, result_out, result_err]
     end
   end
