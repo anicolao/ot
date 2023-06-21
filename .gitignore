@@ -3,6 +3,8 @@
 
 .rspec_status
 .byebug_history
+.irb_history
+.gitconfig
 
 /.DS_Store/
 .DS_Store

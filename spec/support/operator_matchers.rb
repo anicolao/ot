@@ -3,13 +3,14 @@
 RSpec::Matchers.define :be_operator do |expected_op_name|
   match do |bytestream|
     @errors = []
+    @bytestream = bytestream
 
     unless @args
       @errors << 'Expected args value to be tested for explicitly.'
       return false
     end
 
-    sio = StringIO.new(bytestream).binmode
+    sio = bytestream.is_a?(String) ? StringIO.new(bytestream).binmode : bytestream
     marker = get_marker(sio)
     unless marker == '>><<'
       @errors << 'Invalid operator: missing expected marker'
@@ -40,7 +41,12 @@ RSpec::Matchers.define :be_operator do |expected_op_name|
       return false
     end
 
-    unless sio.eof
+    if @allowing_additional_content && !@bytestream.is_a?(StringIO)
+      @errors << '.allowing_additional_content can only be specified when the content is an IO stream'
+      return false
+    end
+
+    unless @allowing_additional_content || sio.eof
       @errors << "Found unexpected additional trailing content (#{sio.read})"
       return false
     end
@@ -99,6 +105,11 @@ RSpec::Matchers.define :be_operator do |expected_op_name|
   def with_content(content, content_len = nil)
     @content = content
     @content_len = content_len || content.bytes.length
+    self
+  end
+
+  def allowing_additional_content
+    @allowing_additional_content = true
     self
   end
 end

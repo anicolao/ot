@@ -45,5 +45,13 @@ RSpec.describe Operator do
     end
 
     xit 'properly handles pipeline errors'
+
+    context 'when a block is provided' do
+      it "returns the block's return value, rather than what it would have otherwise returned" do
+        with_file_containing('hello world') do |f|
+          expect(operator.exec(args: { test_arg: 2 }, input_stream: f) { |output| output * 2 }).to eq('2' * 2)
+        end
+      end
+    end
   end
 end

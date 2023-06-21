@@ -5,6 +5,7 @@ ENV['ENV'] = 'test'
 require 'byebug'
 require 'json'
 require 'simplecov'
+require 'tmpdir'
 
 threshold_file_path = File.join(__dir__, '.coverage_thresholds.json')
 coverage_thresholds = JSON.parse(File.read(threshold_file_path), symbolize_names: true)
@@ -89,9 +90,9 @@ RSpec.configure do |config|
 
   Kernel.srand config.seed
 
-  config.around :each do |each|
+  config.around do |each|
     Dir.mktmpdir do |dir|
-      old_home_dir = ENV['HOME']
+      old_home_dir = Dir.home
       ENV['HOME'] = dir
       each.run
       ENV['HOME'] = old_home_dir

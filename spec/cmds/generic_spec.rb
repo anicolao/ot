@@ -7,7 +7,7 @@ RSpec.describe Cmds::Generic do
   let(:fwd_args) { instance_spy(Hash) }
 
   let(:inv_op_name) { 'inv op' }
-  let(:inv_op_pipeline) { ['a', 'b'] }
+  let(:inv_op_pipeline) { %w[a b] }
   let(:inv_op) { Operator.new(name: inv_op_name, pipeline: inv_op_pipeline) }
   let(:inv_args) { { x: 'x', y: 'y' } }
 
@@ -20,16 +20,37 @@ RSpec.describe Cmds::Generic do
 
   describe '.exec' do
     it 'outputs the serialized version of the inverse operator to $stdout in binmode' do
-      output = capture_stdout {
+      output = capture_stdout do
         described_class.exec(fwd_op:, fwd_args:, input_stream:, inv_op:, inv_args:)
-      }
+      end
       expect(output).to be_operator(inv_op.name)
         .with_pipeline(inv_op.pipeline)
         .with_args(inv_args)
         .with_content(fwd_out)
     end
 
-    context 'the serialized output (for the inverse operation)' do
+    context 'when the output is an Array' do
+      it 'outputs one serialized operator for each element of the Array' do
+        allow(fwd_op).to receive(:exec).with(args: fwd_args, input_stream:).and_return([fwd_out, fwd_out])
+
+        output = StringIO.new(
+          capture_stdout do
+            described_class.exec(fwd_op:, fwd_args:, input_stream:, inv_op:, inv_args:)
+          end
+        )
+        expect(output).to be_operator(inv_op.name)
+          .with_pipeline(inv_op.pipeline)
+          .with_args(inv_args)
+          .with_content(fwd_out)
+          .allowing_additional_content
+        expect(output).to be_operator(inv_op.name)
+          .with_pipeline(inv_op.pipeline)
+          .with_args(inv_args)
+          .with_content(fwd_out)
+      end
+    end
+
+    context 'with the serialized output (for the inverse operation)' do
       def serialized_array(array)
         "#{[array.count].pack('C')}#{array.map { |el| serialized_string(el) }.join}"
       end
@@ -44,11 +65,11 @@ RSpec.describe Cmds::Generic do
         ([len] + str.bytes).pack("LC#{len}")
       end
 
-      subject(:output) {
-        capture_stdout {
+      subject(:output) do
+        capture_stdout do
           described_class.exec(fwd_op:, fwd_args:, input_stream:, inv_op:, inv_args:)
-        }
-      }
+        end
+      end
 
       it 'starts with a magic marker' do
         expect(output).to start_with(described_class::MAGIC_MARKER)
@@ -87,20 +108,20 @@ RSpec.describe Cmds::Generic do
         expect(output[expected_position..]).to start_with(expected_substring)
       end
 
-      context 'for not string items' do
+      context 'with non-string items' do
         let(:inv_op_name) { 1 }
         let(:inv_op_pipeline) { [2, 3] }
         let(:inv_args) { { test_arg: 4 } }
 
         it 'converts them to strings' do
           expect(output).to eq(
-            capture_stdout {
+            capture_stdout do
               described_class.exec(
                 fwd_op:, fwd_args:, input_stream:,
-                inv_op: Operator.new(name: inv_op_name.to_s, pipeline: inv_op_pipeline.map { |x| x.to_s }),
-                inv_args: inv_args.transform_values { |v| v.to_s }
+                inv_op: Operator.new(name: inv_op_name.to_s, pipeline: inv_op_pipeline.map(&:to_s)),
+                inv_args: inv_args.transform_values(&:to_s)
               )
-            }
+            end
           )
         end
       end
@@ -110,12 +131,11 @@ RSpec.describe Cmds::Generic do
   describe '.hydrate' do
     let(:stream) do
       StringIO.new(
-        capture_stdout {
+        capture_stdout do
           described_class.exec(fwd_op:, fwd_args:, input_stream:, inv_op:, inv_args:)
-        }
+        end
       )
     end
-
 
     it 'returns nil if the stream is at EOF' do
       stream = instance_spy(IO, 'stream')

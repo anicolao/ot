@@ -2,5 +2,32 @@
 # frozen_string_literal: true
 
 require_relative '../lib'
+require 'tmpdir'
 
-Cmds::Split.exec(input_stream: $stdin.binmode, strategy: Cmds::Split::Strategy::FixedBlockSize, size: 5)
+Dir.mktmpdir do |tmpdir|
+  file_prefix = "#{tmpdir}/split."
+
+  split_op = case ARGV[0]
+    when '-b'
+      unless ARGV[1].to_i > 0
+        warn "must specify a block size greater than 0"
+        exit 1
+      end
+      Operator.new(name: 'split', pipeline: ["split -b #{ARGV[1..].join(' ')} -d - \"#{file_prefix}\""])
+    else
+      warn "unknown splitter #{ARGV[0]}"
+      warn "args:"
+      warn "  -b: uses `split -d <others args>`"
+      exit 1
+    end
+
+  Cmds::Generic.exec(
+    fwd_op: split_op,
+    fwd_op_proc: proc { Dir.glob("#{file_prefix}*") },
+    input_stream: $stdin.binmode,
+    inv_op: Operator.new(name: 'cat', pipeline: ['cat']),
+    serialization_modifier_proc: proc do |partial_content_filename|
+      { content: File.read(partial_content_filename) }
+    end
+  )
+end

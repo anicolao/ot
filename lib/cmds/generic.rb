@@ -4,19 +4,28 @@ module Cmds
   class Generic
     MAGIC_MARKER = '>><<'
 
-    def self.exec(fwd_op:, fwd_args:, input_stream:, inv_op:, inv_args: {})
-      output = fwd_op.exec(args: fwd_args, input_stream:)
+    # rubocop:disable Metrics/ParameterLists
+    def self.exec(
+      fwd_op:, input_stream:, inv_op:,
+      fwd_op_proc: proc { |x| x },
+      fwd_args: {}, inv_args: {}, serialization_modifier_proc: proc { {} }
+    )
+      potential_output_array = fwd_op.exec(args: fwd_args, input_stream:, &fwd_op_proc)
+      output_array = potential_output_array.is_a?(Array) ? potential_output_array : [potential_output_array]
 
-      to_serialize = {
-        name: inv_op.name, pipeline: inv_op.pipeline,
-        args: inv_args, content: output
-      }
-      to_serialize.merge!(yield output) if block_given?
+      output_array.each do |output|
+        to_serialize = {
+          name: inv_op.name, pipeline: inv_op.pipeline,
+          args: inv_args, content: output
+        }
+        to_serialize.merge!(serialization_modifier_proc.call(output))
 
-      $stdout.binmode.write(
-        serialize(**to_serialize)
-      )
+        $stdout.binmode.write(
+          serialize(**to_serialize)
+        )
+      end
     end
+    # rubocop:enable Metrics/ParameterLists
 
     def self.hydrate(stream:)
       return nil if stream.eof

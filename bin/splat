@@ -2,5 +2,28 @@
 # frozen_string_literal: true
 
 require_relative '../lib'
+require 'tempfile'
 
-Cmds::Splat.exec(input_stream: $stdin.binmode)
+def exec(input_stream:)
+  loop do
+    (op, args, content) = Cmds::Generic.hydrate(stream: input_stream)
+    break unless op
+
+    Tempfile.open do |content_stream|
+      # Required because op.exec needs a real file stream, not a StringIO
+      content_stream.write(content)
+      content_stream.rewind
+
+      result = op.exec(args:, input_stream: content_stream)
+      $stdout.binmode.write(
+        if Cmds::Generic.operator_content?(result)
+          exec(input_stream: StringIO.new(result).binmode)
+        else
+          result
+        end
+      )
+    end
+  end
+end
+
+exec(input_stream: $stdin.binmode)
