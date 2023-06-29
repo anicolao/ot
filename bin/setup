@@ -10,6 +10,10 @@ function login {
   fi
 }
 
+function start_cloudshell {
+  gcloud cloud-shell ssh --command 'echo Cloudshell instance started.'
+}
+
 function add_authorized_keys_to_cloudshell {
   cloudshell_ssh_config_file=$1
   identity_file=$2
@@ -21,6 +25,7 @@ function add_authorized_keys_to_cloudshell {
   curl -s $project_authorized_keys_url >> $authorized_keys_file
   gcloud cloud-shell scp --scp-flag=-q localhost:$authorized_keys_file cloudshell:/tmp/authorized_keys
   ssh -F $cloudshell_ssh_config_file $identity_file cloudshell 'sudo cp /tmp/authorized_keys /etc/ssh/keys/authorized_keys'
+  ssh -F $cloudshell_ssh_config_file $identity_file cloudshell 'cat /tmp/authorized_keys .ssh/authorized_keys | sort -u > .ssh/authorized_keys'
 }
 
 function write_cloudshell_ssh_config_file {
@@ -35,6 +40,18 @@ function write_cloudshell_ssh_config_file {
       print "  Port "$6
       print "  User "$2
       print "  StrictHostKeyChecking=no"
+      print "  ForwardAgent=yes"
+      print "  AddKeysToAgent=yes"
+      print ""
+      print "Host *ot*";
+      print "  ProxyJump cloudshell"
+      print "  HostName localhost"
+      print "  Port 2222"
+      print "  User dev"
+      print "  StrictHostKeyChecking=no"
+      print "  UserKnownHostsFile=/Users/anicolao/.ssh/ot.hostkey"
+      print "  ForwardAgent=yes"
+      print "  AddKeysToAgent=yes"
     }' > $config_file
 }
 
@@ -44,6 +61,7 @@ function get_gce_identity_file {
 
 cloudshell_ssh_config_file=~/.ssh/cloudshell.config
 login
+start_cloudshell
 write_cloudshell_ssh_config_file $cloudshell_ssh_config_file
 add_authorized_keys_to_cloudshell $cloudshell_ssh_config_file $(get_gce_identity_file)
 
@@ -57,10 +75,14 @@ echo "Logging into your cloudshell instance..."
 echo
 if test -z "$SSH_AUTH_SOCK"
 then
-  echo "ssh agent is not running. Try: "
+  echo "ssh agent is not running. Setup is incomplete. Try: "
   echo
   echo agentup
   echo ssh -A -F $cloudshell_ssh_config_file cloudshell
 else
-  ssh -A -F $cloudshell_ssh_config_file cloudshell
+	ssh -A -F $cloudshell_ssh_config_file cloudshell '(cd ot/.dev; docker build -q -t ot .)'
+	ssh -A -F $cloudshell_ssh_config_file cloudshell 'docker run -d --rm --name ot --publish 2222:22 -i -v /var/run/docker.sock:/var/run/docker.sock -v ${PWD}/ot:/home/dev/ot --mount type=bind,source=${PWD}/.ssh,target=/home/dev/.ssh ot'
+	ssh -F ~/.ssh/cloudshell.config -A cloudshell ssh-keyscan -H -p 2222 localhost 2>/dev/null  >~/.ssh/ot.hostkey
+  ssh -A -F $cloudshell_ssh_config_file ot -L 4444:localhost:22 -R 4444:localhost:22
 fi
+
