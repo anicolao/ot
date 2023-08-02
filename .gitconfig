@@ -1,2 +1,5 @@
+[alias]
+	vimdiff = difftool -t vimdiff
+
 [safe]
 	directory = /home/dev
