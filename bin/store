@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'fileutils'
+
 require_relative '../lib'
 
 storage_dir ||= "#{Dir.home.chomp('/')}/.ot/".freeze.tap do |dir|
